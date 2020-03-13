@@ -6,48 +6,78 @@ const TITLE = "A single page React app communicating with GraphQL API v4  of Git
 const axiosGitHubGraphQL = axios.create({
   baseURL: "https://api.github.com/graphql",
   headers: {
-    Authorization: "bearer b2f215bce909e5680472517feea05df9fb94d562"
-  }
+    Authorization: `bearer 9b9e37936d6f99d7d0930cedd99d515f25a68c90`,
+  },
 });
-const GET_ISSUES_OF_REPOSITORY = `
-  query ($organization: String!, $repository: String!) {
-    organization(login: $organization) {
-      name
-      url
-      repository(name: $repository) {
-        name
-        url
-        issues(last: 5) {
+const GET_OPEN_ISSUES = `
+ query ($owner: String!, $repository: String!) 
+  {
+    repository(name: $repository, owner: $owner) {
+       owner {
+        login
+      }
+      pullRequest(number: 3) {
+        commits(first: 10) {
           edges {
             node {
-              id
-              title
-              url
+              commit {
+                oid
+                message
+              }
             }
+          }
+        }
+        reviews(first: 10) {
+          edges {
+            node {
+              state
+            }
+          }
+        }
+        comments(last: 3) {
+          edges {
+            node {
+              author {
+                login
+              }
+              bodyHTML
+            }
+          }
+        }
+      }
+      issues(filterBy: {states: OPEN}, first: 5, orderBy: {field: CREATED_AT, direction: DESC}) {
+        edges {
+          node {
+            id
+            title
+            url
+            state
           }
         }
       }
     }
   }
+
+  
 `;
 
 const getIssuesOfRepository = path => {
-  const [organization, repository] = path.split('/');
+  const [owner, repository] = path.split('/');
 
   return axiosGitHubGraphQL.post('', {
-    query: GET_ISSUES_OF_REPOSITORY,
-    variables: { organization, repository },
+    query: GET_OPEN_ISSUES,
+    variables: { owner, repository },
   });
 };
 
-const resolveIssuesQuery = queryResult => () => ({
-  organization: queryResult.data.data.organization,
-  errors: queryResult.data.errors,
+const resolveIssuesQuery = owner => () => ({
+  organization: owner.data.data.owner,
+  errors: owner.data.errors,
 });
 
 class App extends Component {
   state = {
-    path: 'facebook/react-native',
+    path: 'octocat/Hello-World',
     organization: null,
     errors: null,
   };
@@ -67,14 +97,14 @@ class App extends Component {
   };
 
   onFetchFromGitHub = path => {
-    getIssuesOfRepository(path).then(queryResult =>
-      this.setState(resolveIssuesQuery(queryResult)),
+    getIssuesOfRepository(path).then(owner =>
+      this.setState(resolveIssuesQuery(owner)),
     );
   };
   
 
   render() {
-    const { path, organization, errors } = this.state;
+    const { path, owner, errors } = this.state;
 
     return (
       <div>
@@ -96,8 +126,8 @@ class App extends Component {
 
         <hr />
 
-        {organization ? (
-          <Organization organization={organization} errors={errors} />
+        {owner ? (
+          <Organization organization={owner} errors={errors} />
         ) : (
           <p>404</p>
         )}
@@ -106,7 +136,7 @@ class App extends Component {
   }
 }
 
-const Organization = ({ organization, errors }) => {
+const Organization = ({ owner, errors }) => {
   if (errors) {
     return (
       <p>
@@ -120,9 +150,9 @@ const Organization = ({ organization, errors }) => {
     <div>
       <p>
         <strong>Issues of:</strong>
-        <a href={organization.url}>{organization.name}</a>
+        <a href={owner.url}>{owner.name}</a>
       </p>
-      <Repository repository={organization.repository} />
+      <Repository repository={owner.repository} />
     </div>
   );
 };
