@@ -1,13 +1,14 @@
 import React, { Component } from "react";
 import axios from "axios";
 
-const TITLE = "A single page React app communicating with GraphQL API v4  of GitHub";
+const TITLE =
+  "A single page React app communicating with GraphQL API v4  of GitHub";
 
 const axiosGitHubGraphQL = axios.create({
   baseURL: "https://api.github.com/graphql",
   headers: {
-    Authorization: `bearer 9b9e37936d6f99d7d0930cedd99d515f25a68c90`,
-  },
+    Authorization: `bearer 9b9e37936d6f99d7d0930cedd99d515f25a68c90`
+  }
 });
 const GET_OPEN_ISSUES = `
  query ($owner: String!, $repository: String!) 
@@ -62,24 +63,24 @@ const GET_OPEN_ISSUES = `
 `;
 
 const getIssuesOfRepository = path => {
-  const [owner, repository] = path.split('/');
+  const [owner, repository] = path.split("/");
 
-  return axiosGitHubGraphQL.post('', {
+  return axiosGitHubGraphQL.post("", {
     query: GET_OPEN_ISSUES,
-    variables: { owner, repository },
+    variables: { owner, repository }
   });
 };
 
 const resolveIssuesQuery = owner => () => ({
   organization: owner.data.data.owner,
-  errors: owner.data.errors,
+  errors: owner.data.errors
 });
 
 class App extends Component {
   state = {
-    path: 'octocat/Hello-World',
+    path: "octocat/Hello-World",
     organization: null,
-    errors: null,
+    errors: null
   };
 
   componentDidMount() {
@@ -98,10 +99,9 @@ class App extends Component {
 
   onFetchFromGitHub = path => {
     getIssuesOfRepository(path).then(owner =>
-      this.setState(resolveIssuesQuery(owner)),
+      this.setState(resolveIssuesQuery(owner))
     );
   };
-  
 
   render() {
     const { path, owner, errors } = this.state;
@@ -111,15 +111,13 @@ class App extends Component {
         <h1>{TITLE}</h1>
 
         <form onSubmit={this.onSubmit}>
-          <label htmlFor="url">
-            https://github.com/
-          </label>
+          <label htmlFor="url">https://github.com/</label>
           <input
             id="url"
             type="text"
             value={path}
             onChange={this.onChange}
-            style={{ width: '300px' }}
+            style={{ width: "300px" }}
           />
           <button type="submit">Search</button>
         </form>
@@ -141,7 +139,7 @@ const Organization = ({ owner, errors }) => {
     return (
       <p>
         <strong>Something went wrong:</strong>
-        {errors.map(error => error.message).join(' ')}
+        {errors.map(error => error.message).join(" ")}
       </p>
     );
   }
