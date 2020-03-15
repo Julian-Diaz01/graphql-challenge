@@ -1,107 +1,89 @@
 import React, { Component } from "react";
 import axios from "axios";
+import { Tabs } from "@yazanaabed/react-tabs";
+import {
+  resolveQueryOpen,
+  resolveQueryClosed,
+  resolveQueryPullRequest,
+  getOpenIssues,
+  getClosedIssues,
+  getPullRequest
+} from "./FetchData";
+import {
+  DisplayOpenIssues,
+  DisplayClosedIssues,
+  DisplayPullRequest,
+  DisplayRepInfo
+} from "./displayData";
 
 const TITLE =
   "A single page React app communicating with GraphQL API v4  of GitHub";
 
-const axiosGitHubGraphQL = axios.create({
-  baseURL: "https://api.github.com/graphql",
-  headers: {
-    Authorization: `bearer 9b9e37936d6f99d7d0930cedd99d515f25a68c90`
-  }
-});
-const GET_OPEN_ISSUES = `
- query ($owner: String!, $repository: String!) 
-  {
-    repository(name: $repository, owner: $owner) {
-       owner {
-        login
-      }
-      pullRequest(number: 3) {
-        commits(first: 10) {
-          edges {
-            node {
-              commit {
-                oid
-                message
-              }
-            }
-          }
-        }
-        reviews(first: 10) {
-          edges {
-            node {
-              state
-            }
-          }
-        }
-        comments(last: 3) {
-          edges {
-            node {
-              author {
-                login
-              }
-              bodyHTML
-            }
-          }
-        }
-      }
-    }
-  }
-
-  
-`;
-
-const getIssuesOfRepository = path => {
-  const [owner, repository] = path.split("/");
-
-  return axiosGitHubGraphQL.post("", {
-    query: GET_OPEN_ISSUES,
-    variables: { owner, repository }
-  });
-};
-
-const resolveIssuesQuery = owner => () => ({
-  organization: owner.data.data.owner,
-  errors: owner.data.errors
-});
-
-class App extends Component {
+  class App extends Component {
   state = {
-    path: "octocat/Hello-World",
-    organization: null,
+    auth: "auth token",
+    path: "facebook/react-native",
+    data: null,
+    closed: null,
+    pull_Request: null,
     errors: null
   };
 
   componentDidMount() {
-    this.onFetchFromGitHub(this.state.path);
+    this.onFetchOpenIssuesFromGitHub(this.state.path);
+    this.onFetchClosedIssuesFromGitHub(this.state.path);
+    this.onFetchPullRequestFromGitHub(this.state.path);
   }
 
   onChange = event => {
+    this.setState({ auth: event.target.value });
     this.setState({ path: event.target.value });
   };
 
   onSubmit = event => {
-    this.onFetchFromGitHub(this.state.path);
+    this.onFetchOpenIssuesFromGitHub(this.state.path);
+    this.onFetchClosedIssuesFromGitHub(this.state.path);
+    this.onFetchPullRequestFromGitHub(this.state.path);
 
     event.preventDefault();
   };
 
-  onFetchFromGitHub = path => {
-    getIssuesOfRepository(path).then(owner =>
-      this.setState(resolveIssuesQuery(owner))
+  onFetchOpenIssuesFromGitHub = path => {
+    getOpenIssues(path).then(queryResult =>
+      this.setState(resolveQueryOpen(queryResult))
+    );
+  };
+
+  onFetchClosedIssuesFromGitHub = path => {
+    getClosedIssues(path).then(queryResult =>
+      this.setState(resolveQueryClosed(queryResult))
+    );
+  };
+  onFetchPullRequestFromGitHub = path => {
+    getPullRequest(path).then(queryResult =>
+      this.setState(resolveQueryPullRequest(queryResult))
     );
   };
 
   render() {
-    const { path, owner, errors } = this.state;
+    const { path, data, errors, closed, pull_Request, auth } = this.state;
 
     return (
       <div>
         <h1>{TITLE}</h1>
-
         <form onSubmit={this.onSubmit}>
-          <label htmlFor="url">https://github.com/</label>
+          <label htmlFor="auth">Authorization Token</label>
+          <input
+            id="auth"
+            type="text"
+            value={auth}
+            onChange={this.onChange}
+            style={{ width: "300px" }}
+          />
+          <button type="submit">Search</button>
+        </form>
+        <form onSubmit={this.onSubmit}>
+          <label htmlFor="url">Issues for https://github.com/</label>
           <input
             id="url"
             type="text"
@@ -114,52 +96,42 @@ class App extends Component {
 
         <hr />
 
-        {owner ? (
-          <Organization organization={owner} errors={errors} />
+        {data && closed && pull_Request ? (
+          <div>
+            <div style={styles}>
+              <DisplayRepInfo data={data} />
+              <Tabs
+                activeTab={{
+                  id: "tab1"
+                }}
+              >
+                <Tabs.Tab id="tab1" title="Open Issues">
+                  <div style={{ padding: 10 }}>
+                    <DisplayOpenIssues data={data} />
+                  </div>
+                </Tabs.Tab>
+                <Tabs.Tab id="tab2" title="Closed Issues">
+                  <div style={{ padding: 10 }}>
+                    <DisplayClosedIssues closed={closed} />
+                  </div>
+                </Tabs.Tab>
+                <Tabs.Tab id="tab3" title="Pull Request">
+                  <div style={{ padding: 10 }}>
+                    <DisplayPullRequest pull_Request={pull_Request} />
+                  </div>
+                </Tabs.Tab>
+              </Tabs>
+            </div>
+          </div>
         ) : (
-          <p>404</p>
+          <p>No info</p>
         )}
       </div>
     );
   }
 }
-
-const Organization = ({ owner, errors }) => {
-  if (errors) {
-    return (
-      <p>
-        <strong>Something went wrong:</strong>
-        {errors.map(error => error.message).join(" ")}
-      </p>
-    );
-  }
-
-  return (
-    <div>
-      <p>
-        <strong>Issues of:</strong>
-        <a href={owner.url}>{owner.name}</a>
-      </p>
-      <Repository repository={owner.repository} />
-    </div>
-  );
+const styles = {
+  fontFamily: "sans-serif",
+  textAlign: "left"
 };
-
-const Repository = ({ repository }) => (
-  <div>
-    <p>
-      <strong>In Repository:</strong>
-      <a href={repository.url}>{repository.name}</a>
-    </p>
-
-    <ul>
-      {repository.issues.edges.map(issue => (
-        <li key={issue.node.id}>
-          <a href={issue.node.url}>{issue.node.title}</a>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
 export default App;
