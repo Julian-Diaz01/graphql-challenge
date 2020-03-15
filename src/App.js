@@ -46,16 +46,6 @@ const GET_OPEN_ISSUES = `
           }
         }
       }
-      issues(filterBy: {states: OPEN}, first: 5, orderBy: {field: CREATED_AT, direction: DESC}) {
-        edges {
-          node {
-            id
-            title
-            url
-            state
-          }
-        }
-      }
     }
   }
 
