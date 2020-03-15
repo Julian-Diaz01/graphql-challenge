@@ -4,7 +4,7 @@ import axios from "axios";
 const axiosGitHubGraphQL = axios.create({
     baseURL: "https://api.github.com/graphql",
     headers: {
-      Authorization: `bearer xxxxxxxx `
+      Authorization: `bearer xxxx `
     }
   });
  const GET_OPEN_ISSUES = `
@@ -24,12 +24,22 @@ const axiosGitHubGraphQL = axios.create({
               title
               url
               state
+              comments(last: 5) {
+                edges {
+                  node {
+                    body
+                    author {
+                      url
+                      login
+                    }
+                  }
+                }
+              }
             }
           }
         }
       }
     }
-  
     
   `;
  const GET_CLOSED_ISSUES = `
@@ -49,12 +59,22 @@ const axiosGitHubGraphQL = axios.create({
               title
               url
               state
+              comments(last: 5) {
+                edges {
+                  node {
+                    body
+                    author {
+                      url
+                      login
+                    }
+                  }
+                }
+              }
             }
           }
         }
       }
     }
-  
     
   `;
  const GET_PULL_REQUEST = `
@@ -72,6 +92,16 @@ const axiosGitHubGraphQL = axios.create({
             id
             url
             title
+            comments(last: 10) {
+              edges {
+                node {
+                  body
+                  author {
+                    login
+                  }
+                }
+              }
+            }
           }
         }
       }

@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import axios from "axios";
 import { Tabs } from "@yazanaabed/react-tabs";
 import {
   resolveQueryOpen,
@@ -121,6 +120,8 @@ const TITLE =
                   </div>
                 </Tabs.Tab>
               </Tabs>
+            
+           
             </div>
           </div>
         ) : (
