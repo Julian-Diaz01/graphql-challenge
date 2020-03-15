@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import axios from "axios";
+
 import { Tabs } from "@yazanaabed/react-tabs";
 import {
   resolveQueryOpen,
@@ -17,6 +19,8 @@ import {
 
 const TITLE =
   "A single page React app communicating with GraphQL API v4  of GitHub";
+  
+ 
 
   class App extends Component {
   state = {
@@ -27,7 +31,7 @@ const TITLE =
     pull_Request: null,
     errors: null
   };
-
+  
   componentDidMount() {
     this.onFetchOpenIssuesFromGitHub(this.state.path);
     this.onFetchClosedIssuesFromGitHub(this.state.path);
@@ -35,7 +39,6 @@ const TITLE =
   }
 
   onChange = event => {
-    this.setState({ auth: event.target.value });
     this.setState({ path: event.target.value });
   };
 
@@ -46,7 +49,7 @@ const TITLE =
 
     event.preventDefault();
   };
-
+  
   onFetchOpenIssuesFromGitHub = path => {
     getOpenIssues(path).then(queryResult =>
       this.setState(resolveQueryOpen(queryResult))
@@ -70,17 +73,8 @@ const TITLE =
     return (
       <div>
         <h1>{TITLE}</h1>
-        <form onSubmit={this.onSubmit}>
-          <label htmlFor="auth">Authorization Token</label>
-          <input
-            id="auth"
-            type="text"
-            value={auth}
-            onChange={this.onChange}
-            style={{ width: "300px" }}
-          />
-          <button type="submit">Search</button>
-        </form>
+        
+
         <form onSubmit={this.onSubmit}>
           <label htmlFor="url">Issues for https://github.com/</label>
           <input

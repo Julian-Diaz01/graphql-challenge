@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import axios from "axios";
-
+  
 const axiosGitHubGraphQL = axios.create({
-    baseURL: "https://api.github.com/graphql",
-    headers: {
-      Authorization: `bearer xxxx `
-    }
-  });
+  baseURL: "https://api.github.com/graphql",
+  headers: {
+    Authorization: `bearer 9885eb19ce30094d0c010bf8f662754e3524319d `
+  }
+});
  const GET_OPEN_ISSUES = `
    query ($owner: String!, $repository: String!) 
     {
